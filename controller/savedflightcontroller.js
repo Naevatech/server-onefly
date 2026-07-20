@@ -1,5 +1,5 @@
 import { getAuth } from '@clerk/express'
-import SavedFlight from '../model/Savedflight'
+import SavedFlight from '../model/Savedflight.js'
 
 // GET /api/saved-flights
 export const listSavedFlights = async (req, res) => {
