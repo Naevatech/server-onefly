@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import requireAuth from '../middleware/requireAuth.js'
-import { listSavedFlights, saveFlight, unsaveFlight } from '../controller/savedFlightController.js'
+import { listSavedFlights, saveFlight, unsaveFlight } from '../controller/savedflightcontroller.js'
 
 const router = Router()
 
