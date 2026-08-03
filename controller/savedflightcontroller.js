@@ -1,5 +1,5 @@
 import { getAuth } from '@clerk/express'
-import SavedFlight from '../model/Savedflight.js'
+import SavedFlight from '../model/SavedFlight.js'
 
 // GET /api/saved-flights
 export const listSavedFlights = async (req, res) => {
@@ -17,18 +17,22 @@ export const listSavedFlights = async (req, res) => {
 // POST /api/saved-flights
 export const saveFlight = async (req, res) => {
   const { userId } = getAuth(req)
-  const { offerId, airline, origin, destination, departingAt, arrivingAt, totalAmount, totalCurrency } =
-    req.body
+  const { offerId, airline, legs, totalAmount, totalCurrency } = req.body
 
   if (!offerId) {
     return res.status(400).json({ error: 'offerId is required' })
   }
+
+  if (!Array.isArray(legs) || legs.length === 0) {
+    return res.status(400).json({ error: 'legs is required and must be a non-empty array' })
+  }
+
   try {
-    // Resaving the same offer update some property of that offer like price
+    // Re-saving the same offer doesn't throw a duplicate-key
     const saved = await SavedFlight.findOneAndUpdate(
       { userId, offerId },
-      { userId, offerId, airline, origin, destination, departingAt, arrivingAt, totalAmount, totalCurrency },
-      { upsert: true, new: true },
+      { userId, offerId, airline, legs, totalAmount, totalCurrency },
+      { upsert: true, new: true, runValidators: true },
     )
     res.status(201).json({ savedFlight: saved })
   } catch (error) {

@@ -9,6 +9,7 @@ import flightRoute from "./routes/flightRoute.js";
 import placeRoute from "./routes/placeRoute.js";
 import SavedFlightRoute from "./routes/Savedflightroute.js";
 import { clerkMiddleware } from '@clerk/express';
+import paymentRoute from './routes/paymentRoute.js'
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -16,7 +17,7 @@ const port = process.env.PORT || 5000;
 connectDB();
 const allowedOrigins = [process.env.CLIENT_DOMAIN].filter(Boolean);
 const corsOptions = {
-  origin: ['http://localhost:5173', 'https://onefly.vercel.app'],
+  origin: ['http://localhost:5174', 'https://onefly.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -38,6 +39,8 @@ app.use("/api/booking", bookingRouter);
 app.use('/api/flights', flightRoute)
 app.use('/api/places', placeRoute)
 app.use('/api/saved-flights', SavedFlightRoute)
+app.use('/api/payment', paymentRoute)
+
 
 const isDirectRun = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
 

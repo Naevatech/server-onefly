@@ -23,6 +23,7 @@ export const getOffer = async (req, res) => {
         stops: slice.segments.length - 1,
         segments: slice.segments.map((segment) => ({
           airline: segment.marketing_carrier?.name ?? null,
+          // logo_symbol_url = icon only. logo_lockup_url = icon + wordmark.
           airlineLogo: segment.marketing_carrier?.logo_symbol_url ?? null,
           airlineLogoLockup: segment.marketing_carrier?.logo_lockup_url ?? null,
           flightNumber: segment.marketing_carrier_flight_number ?? null,
@@ -44,29 +45,34 @@ export const getOffer = async (req, res) => {
     res.status(error.meta?.status || 500).json({
       error:
         error.errors?.[0]?.message ||
-        'Failed to fetch this offer — it may have expired (Duffel offers are only valid for a limited time after search).',
+        'Failed to fetch this offer — it may have expired',
     })
   }
 }
 
 // POST /api/flights/search
 export const searchFlights = async (req, res) => {
-  const { origin, destination, departureDate, passengers, cabinClass } = req.body
+  const { origin, destination, departureDate, returnDate, passengers, cabinClass } = req.body
 
   if (!origin || !destination || !departureDate) {
     return res.status(400).json({
       error: 'origin, destination, and departureDate are required',
     })
   }
+  const slices = [{ origin, destination, departure_date: departureDate }]
+  if (returnDate) {
+    slices.push({ origin: destination, destination: origin, departure_date: returnDate })
+  }
 
   try {
     const offerRequest = await duffel.offerRequests.create({
-      slices: [{ origin, destination, departure_date: departureDate }],
+      slices,
       passengers: passengers?.length ? passengers : [{ type: 'adult' }],
       cabin_class: cabinClass || 'economy',
       return_offers: true,
     })
 
+    //JSON REURN FOR THE SEARCH
     const offers = offerRequest.data.offers.map((offer) => ({
       id: offer.id,
       totalAmount: offer.total_amount,
