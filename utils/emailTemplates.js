@@ -8,7 +8,7 @@ export const confirmationEmailHtml = (booking) => {
   const leadPassenger = booking.passengers[0]
   const outbound = booking.legs[0]
   const returnLeg = booking.legs[1]
-  const viewUrl = `${process.env.FRONTEND_URL}/booking/${booking.pnr}`
+  const viewUrl = `${process.env.CLIENT_DOMAIN}/booking/${booking.pnr}`
 
   return `
   <div style="max-width:480px;margin:0 auto;font-family:Arial,sans-serif;background:#f5f6fc;padding:24px;">

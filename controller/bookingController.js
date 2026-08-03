@@ -13,7 +13,8 @@ export async function createBooking(req, res) {
   const { offerId, passengers } = req.body
   res.status(201).json({ userId, offerId, passengers, status: 'pending' })
 }
-// No ambiguous characters (0/O, 1/I) so a PNR is easy to read/type back.
+
+// PNR = Passenger Name Record is the booking reference number for a flight reservation generating a 6-character code like AB3XY9)
 const PNR_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const generatePnr = () => {
   let pnr = ''
