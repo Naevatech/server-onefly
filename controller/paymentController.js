@@ -9,9 +9,6 @@ export const createPaymentIntent = async (req, res) => {
   }
 
   try {
-    // Stripe expects the smallest currency unit (cents/pence), Duffel
-    // returns a decimal string like "217.90" — convert and round to avoid
-    // floating point drift (e.g. 217.90 * 100 landing on 21789.999999).
     const amountInSmallestUnit = Math.round(Number(amount) * 100)
 
     const paymentIntent = await stripe.paymentIntents.create({
