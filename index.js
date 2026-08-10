@@ -10,6 +10,7 @@ import placeRoute from "./routes/placeRoute.js";
 import SavedFlightRoute from "./routes/Savedflightroute.js";
 import { clerkMiddleware } from '@clerk/express';
 import paymentRoute from './routes/paymentRoute.js'
+import adminRoute from './routes/adminRoute.js'
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -40,6 +41,7 @@ app.use('/api/flights', flightRoute)
 app.use('/api/places', placeRoute)
 app.use('/api/saved-flights', SavedFlightRoute)
 app.use('/api/payment', paymentRoute)
+app.use('/api/admin', adminRoute)
 
 
 const isDirectRun = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
