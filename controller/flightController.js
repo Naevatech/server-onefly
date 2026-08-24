@@ -22,6 +22,8 @@ export const getOffer = async (req, res) => {
         duration: slice.duration,
         stops: slice.segments.length - 1,
         segments: slice.segments.map((segment) => ({
+          origin: segment.origin.iata_code,
+          destination: segment.destination.iata_code,
           airline: segment.marketing_carrier?.name ?? null,
           // logo_symbol_url = icon only. logo_lockup_url = icon + wordmark.
           airlineLogo: segment.marketing_carrier?.logo_symbol_url ?? null,
@@ -32,11 +34,22 @@ export const getOffer = async (req, res) => {
       }
     })
 
+    const firstPassengerBaggage = offer.slices[0]?.segments[0]?.passengers?.[0]?.baggages
+    const checkedBag = firstPassengerBaggage?.find((b) => b.type === 'checked')
+
     res.json({
       id: offer.id,
       totalAmount: offer.total_amount,
       totalCurrency: offer.total_currency,
       totalEmissionsKg: offer.total_emissions_kg,
+      taxAmount: offer.tax_amount,
+      taxCurrency: offer.tax_currency,
+      checkedBagsIncluded: checkedBag?.quantity ?? 0,
+      conditions: {
+        refundable: offer.conditions?.refund_before_departure?.allowed ?? null,
+        refundPenaltyAmount: offer.conditions?.refund_before_departure?.penalty_amount ?? null,
+        refundPenaltyCurrency: offer.conditions?.refund_before_departure?.penalty_currency ?? null,
+      },
       slices,
       passengerCount: offer.passengers?.length ?? 1,
     })
@@ -45,7 +58,7 @@ export const getOffer = async (req, res) => {
     res.status(error.meta?.status || 500).json({
       error:
         error.errors?.[0]?.message ||
-        'Failed to fetch this offer — it may have expired',
+        'Failed to fetch this offer — it may have expired (Duffel offers are only valid for a limited time after search).',
     })
   }
 }
@@ -59,6 +72,7 @@ export const searchFlights = async (req, res) => {
       error: 'origin, destination, and departureDate are required',
     })
   }
+
   const slices = [{ origin, destination, departure_date: departureDate }]
   if (returnDate) {
     slices.push({ origin: destination, destination: origin, departure_date: returnDate })
@@ -72,33 +86,48 @@ export const searchFlights = async (req, res) => {
       return_offers: true,
     })
 
-    //JSON REURN FOR THE SEARCH
-    const offers = offerRequest.data.offers.map((offer) => ({
-      id: offer.id,
-      totalAmount: offer.total_amount,
-      totalCurrency: offer.total_currency,
-      slices: offer.slices.map((slice) => {
-        const firstSegment = slice.segments[0]
-        const lastSegment = slice.segments[slice.segments.length - 1]
+    const offers = offerRequest.data.offers.map((offer) => {
+      const firstPassengerBaggage = offer.slices[0]?.segments[0]?.passengers?.[0]?.baggages
+      const checkedBag = firstPassengerBaggage?.find((b) => b.type === 'checked')
 
-        return {
-          origin: slice.origin.iata_code,
-          originCity: slice.origin.city_name || slice.origin.name,
-          destination: slice.destination.iata_code,
-          destinationCity: slice.destination.city_name || slice.destination.name,
-          departingAt: firstSegment?.departing_at,
-          arrivingAt: lastSegment?.arriving_at,
-          duration: slice.duration,
-          stops: slice.segments.length - 1,
-          segments: slice.segments.map((segment) => ({
-            airline: segment.marketing_carrier?.name,
-            airlineLogo: segment.marketing_carrier?.logo_symbol_url ?? null,
-            flightNumber: segment.marketing_carrier_flight_number,
-            aircraft: segment.aircraft?.name,
-          })),
-        }
-      }),
-    }))
+      return {
+        id: offer.id,
+        totalAmount: offer.total_amount,
+        totalCurrency: offer.total_currency,
+        totalEmissionsKg: offer.total_emissions_kg,
+        taxAmount: offer.tax_amount,
+        taxCurrency: offer.tax_currency,
+        checkedBagsIncluded: checkedBag?.quantity ?? 0,
+        conditions: {
+          refundable: offer.conditions?.refund_before_departure?.allowed ?? null,
+          refundPenaltyAmount: offer.conditions?.refund_before_departure?.penalty_amount ?? null,
+          refundPenaltyCurrency: offer.conditions?.refund_before_departure?.penalty_currency ?? null,
+        },
+        slices: offer.slices.map((slice) => {
+          const firstSegment = slice.segments[0]
+          const lastSegment = slice.segments[slice.segments.length - 1]
+
+          return {
+            origin: slice.origin.iata_code,
+            originCity: slice.origin.city_name || slice.origin.name,
+            destination: slice.destination.iata_code,
+            destinationCity: slice.destination.city_name || slice.destination.name,
+            departingAt: firstSegment?.departing_at,
+            arrivingAt: lastSegment?.arriving_at,
+            duration: slice.duration,
+            stops: slice.segments.length - 1,
+            segments: slice.segments.map((segment) => ({
+              origin: segment.origin.iata_code,
+              destination: segment.destination.iata_code,
+              airline: segment.marketing_carrier?.name,
+              airlineLogo: segment.marketing_carrier?.logo_symbol_url ?? null,
+              flightNumber: segment.marketing_carrier_flight_number,
+              aircraft: segment.aircraft?.name,
+            })),
+          }
+        }),
+      }
+    })
 
     res.json({ offerRequestId: offerRequest.data.id, offers })
   } catch (error) {
