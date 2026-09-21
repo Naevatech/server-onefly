@@ -36,7 +36,7 @@ app.use(cookieParser());
 
 // API ENDPOINTS
 app.get("/", (req, res) => res.send("API FOR FLIGHT IS WORKING"));
-app.use("/api/booking", bookingRouter);
+app.use("/api/bookings", bookingRouter);
 app.use('/api/flights', flightRoute)
 app.use('/api/places', placeRoute)
 app.use('/api/saved-flights', SavedFlightRoute)
